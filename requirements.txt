@@ -2,8 +2,8 @@ numpy
 pandas
 seaborn
 pygame
-matplotlib.pyplot
-sklearn.metrics
-google.colab
+matplotlib
+sklearn
+google
 itertools
 sklearn
