@@ -3,7 +3,6 @@ pandas
 seaborn
 pygame
 matplotlib
-sklearn
+scikit-learn
 google
 itertools
-scikit-learn
