@@ -293,59 +293,58 @@ def genetic_algorithm(X_train, y_train, pop_size=50, num_generations=100):
 
     return best_solution
 
-# Algoritmo Genético com Pygame
-def genetic_algorithm_with_pygame(X_train, y_train, pop_size=50, num_generations=100):
+def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=10):
     num_features = X_train.shape[1]
     population = initialize_population(pop_size, num_features)
     best_solution = None
     best_fitness = -np.inf
     fitness_history = []
 
-    running = True
-    while running:
-        for generation in range(num_generations):
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    running = False
-                    pygame.quit()
-                    return best_solution
+    for generation in range(num_generations):
+        fitness = np.array([fitness_function(ind, y_train) for ind in population])
+        fitness_history.append(fitness.max())
 
-            fitness = np.array([fitness_function(ind, y_train) for ind in population])
-            fitness_history.append(fitness.max())
+        next_population = []
 
-            next_population = []
+        # Seleção e reprodução
+        for _ in range(pop_size // 2):
+            parent1 = tournament_selection(population, fitness)
+            parent2 = tournament_selection(population, fitness)
+            child1, child2 = crossover(parent1, parent2)
+            next_population.append(mutate(child1))
+            next_population.append(mutate(child2))
 
-            # Seleção e reprodução
-            for _ in range(pop_size // 2):
-                parent1 = tournament_selection(population, fitness)
-                parent2 = tournament_selection(population, fitness)
-                child1, child2 = crossover(parent1, parent2)
-                next_population.append(mutate(child1))
-                next_population.append(mutate(child2))
+        next_population.append(population[fitness.argmax()])  # Elitismo
+        population = np.array(next_population)
 
-            next_population.append(population[fitness.argmax()])  # Elitismo
-            population = np.array(next_population)
+        # Melhor solução
+        if fitness.max() > best_fitness:
+            best_fitness = fitness.max()
+            best_solution = population[fitness.argmax()]
 
-            # Melhor solução
-            if fitness.max() > best_fitness:
-                best_fitness = fitness.max()
-                best_solution = population[fitness.argmax()]
+        # Atualizar gráfico no Streamlit
+        st.line_chart(fitness_history)
 
-            # Atualizar o gráfico no Pygame
-            draw_graph(screen, fitness_history)
-
-            print(f"Geração {generation}: Melhor aptidão = {best_fitness:.4f}")
-
-            # Limitando o FPS para evitar sobrecarga
-            clock.tick(FPS)
+        st.write(f"Geração {generation + 1}: Melhor aptidão = {best_fitness:.4f}")
 
     return best_solution
 
-# Executando o algoritmo genético
-# best_solution = genetic_algorithm(X_train_transformed, y_train_dt['Credit_Score'].values)
-best_solution = genetic_algorithm_with_pygame(X_train_transformed, y_train_dt['Credit_Score'].values)
+# Dados de entrada (carregue seu dataset aqui)
+# X_train_transformed e y_train_dt precisam estar definidos
+# Exemplo:
+# X_train_transformed = ...
+# y_train_dt = ...
 
-# Resultados
-print("\nMelhor solução encontrada:")
-print(f"Pesos: {best_solution[:-1]}")
-print(f"Limiar de decisão: {best_solution[-1]:.4f}")
+# Interface Streamlit
+st.title("Algoritmo Genético com Visualização no Streamlit")
+pop_size = st.sidebar.slider("Tamanho da população", min_value=10, max_value=200, value=50, step=10)
+num_generations = st.sidebar.slider("Número de gerações", min_value=10, max_value=500, value=100, step=10)
+
+if st.button("Iniciar Algoritmo Genético"):
+    best_solution = genetic_algorithm_streamlit(
+        X_train_transformed, y_train_dt["Credit_Score"].values, pop_size=pop_size, num_generations=num_generations
+    )
+    st.write("Melhor solução encontrada:")
+    st.write(f"Pesos: {best_solution[:-2]}")
+    st.write(f"Limiar de decisão Standard: {best_solution[-2]:.4f}")
+    st.write(f"Limiar de decisão Good: {best_solution[-1]:.4f}")
