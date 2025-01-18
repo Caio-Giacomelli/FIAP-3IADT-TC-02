@@ -147,16 +147,37 @@ y_train_dt = pd.DataFrame(y_train)
 
 # Pygame
 
-# WIDTH, HEIGHT = 800, 400
-# NODE_RADIUS = 10
-# FPS = 30
-# PLOT_X_OFFSET = 450
+WIDTH, HEIGHT = 800, 600
+FPS = 30
+GRAPH_WIDTH = 600
+GRAPH_HEIGHT = 400
+GRAPH_OFFSET_X = 100
+GRAPH_OFFSET_Y = 100
 
-# pygame.init()
-# screen = pygame.display.set_mode((WIDTH, HEIGHT))
-# pygame.display.set_caption("Otimizador de Pesos de Análise de Crédito")
-# clock = pygame.time.Clock()
-# generation_counter = itertools.count(start=1)
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Crescimento da Melhor Aptidão - Algoritmo Genético")
+clock = pygame.time.Clock()
+
+# Função para desenhar o gráfico
+def draw_graph(screen, fitness_history):
+    screen.fill((255, 255, 255))  # Fundo branco
+    pygame.draw.rect(screen, (0, 0, 0), (GRAPH_OFFSET_X, GRAPH_OFFSET_Y, GRAPH_WIDTH, GRAPH_HEIGHT), 2)  # Moldura do gráfico
+
+    if len(fitness_history) > 1:
+        max_fitness = max(fitness_history)
+        min_fitness = min(fitness_history)
+        scale_x = GRAPH_WIDTH / len(fitness_history)
+        scale_y = GRAPH_HEIGHT / (max_fitness - min_fitness) if max_fitness != min_fitness else 1
+
+        for i in range(1, len(fitness_history)):
+            x1 = GRAPH_OFFSET_X + (i - 1) * scale_x
+            y1 = GRAPH_OFFSET_Y + GRAPH_HEIGHT - (fitness_history[i - 1] - min_fitness) * scale_y
+            x2 = GRAPH_OFFSET_X + i * scale_x
+            y2 = GRAPH_OFFSET_Y + GRAPH_HEIGHT - (fitness_history[i] - min_fitness) * scale_y
+            pygame.draw.line(screen, (255, 0, 0), (x1, y1), (x2, y2), 2)  # Linha do gráfico
+
+    pygame.display.flip()
 
 # Função de aptidão
 def fitness_function(chromosome, y_train):
@@ -272,8 +293,57 @@ def genetic_algorithm(X_train, y_train, pop_size=50, num_generations=100):
 
     return best_solution
 
+# Algoritmo Genético com Pygame
+def genetic_algorithm_with_pygame(X_train, y_train, pop_size=50, num_generations=100):
+    num_features = X_train.shape[1]
+    population = initialize_population(pop_size, num_features)
+    best_solution = None
+    best_fitness = -np.inf
+    fitness_history = []
+
+    running = True
+    while running:
+        for generation in range(num_generations):
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    running = False
+                    pygame.quit()
+                    return best_solution
+
+            fitness = np.array([fitness_function(ind, y_train) for ind in population])
+            fitness_history.append(fitness.max())
+
+            next_population = []
+
+            # Seleção e reprodução
+            for _ in range(pop_size // 2):
+                parent1 = tournament_selection(population, fitness)
+                parent2 = tournament_selection(population, fitness)
+                child1, child2 = crossover(parent1, parent2)
+                next_population.append(mutate(child1))
+                next_population.append(mutate(child2))
+
+            next_population.append(population[fitness.argmax()])  # Elitismo
+            population = np.array(next_population)
+
+            # Melhor solução
+            if fitness.max() > best_fitness:
+                best_fitness = fitness.max()
+                best_solution = population[fitness.argmax()]
+
+            # Atualizar o gráfico no Pygame
+            draw_graph(screen, fitness_history)
+
+            print(f"Geração {generation}: Melhor aptidão = {best_fitness:.4f}")
+
+            # Limitando o FPS para evitar sobrecarga
+            clock.tick(FPS)
+
+    return best_solution
+
 # Executando o algoritmo genético
-best_solution = genetic_algorithm(X_train_transformed, y_train_dt['Credit_Score'].values)
+# best_solution = genetic_algorithm(X_train_transformed, y_train_dt['Credit_Score'].values)
+best_solution = genetic_algorithm_with_pygame(X_train_transformed, y_train_dt['Credit_Score'].values)
 
 # Resultados
 print("\nMelhor solução encontrada:")
