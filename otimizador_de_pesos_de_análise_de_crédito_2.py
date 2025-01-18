@@ -10,6 +10,7 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 import streamlit as st
+from scipy.special import expit  # Função sigmoid eficiente
 
 # Cache para carregar os dados apenas uma vez
 @st.cache_data
