@@ -75,7 +75,7 @@ def mutate(chromosome, mutation_rate=0.1):
             chromosome[i] += np.random.uniform(-0.1, 0.1)
     return chromosome
 
-def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=10):
+def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=10, crossover_rate, mutation_rate):
     num_features = X_train.shape[1]
     population = initialize_population(pop_size, num_features)
     best_solution = None
@@ -94,9 +94,9 @@ def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=1
         for _ in range(pop_size // 2):
             parent1 = tournament_selection(population, fitness)
             parent2 = tournament_selection(population, fitness)
-            child1, child2 = crossover(parent1, parent2)
-            next_population.append(mutate(child1))
-            next_population.append(mutate(child2))
+            child1, child2 = crossover(parent1, parent2, crossover_rate)
+            next_population.append(mutate(child1, mutation_rate))
+            next_population.append(mutate(child2, mutation_rate))
 
         next_population.append(population[fitness.argmax()]) # Elitismo
         population = np.array(next_population)
@@ -145,9 +145,11 @@ y_train = data["Credit_Score"].values
 # Configurações do algoritmo
 pop_size = st.sidebar.slider("Tamanho da população", 10, 200, 50, 10)
 num_generations = st.sidebar.slider("Número de gerações", 10, 500, 100, 10)
+crossover_rate = st.sidebar.slider("Taxa de Cruzamento", 0.1, 1, 0.8, 0.1)
+mutation_rate = st.sidebar.slider("Taxa de Mutação", 0.1, 1, 0.5, 0.1)
 
 if st.button("Iniciar Algoritmo Genético"):
-    best_solution = genetic_algorithm_streamlit(X_train, y_train, pop_size, num_generations)
+    best_solution = genetic_algorithm_streamlit(X_train, y_train, pop_size, num_generations, crossover_rate, mutation_rate)
     st.write("Melhor solução encontrada:")
     st.write(f"Pesos: {best_solution[:-2]}")
     st.write(f"Limiar de decisão Standard: {best_solution[-2]:.4f}")
