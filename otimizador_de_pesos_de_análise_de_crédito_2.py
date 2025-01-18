@@ -174,13 +174,16 @@ crossover_option = st.sidebar.selectbox(
     ("Single Point Crossover", "Arithmetic Crossover"),
 )
 
-crossover_option = st.sidebar.selectbox(
+mutate_option = st.sidebar.selectbox(
     "Selecione o método de Mutação",
     ("Mutação com Perturbação Uniforme", "Mutação Gaussiana"),
 )
 
-if (crossover_option == "Mutação Gaussiana"): crossover_function = gaussian_mutate
-else: crossover_function = mutate
+if (crossover_option == "Single Point Crossover"): crossover_function = crossover
+else: crossover_function = arithmetic_crossover
+
+if (mutate_option == "Mutação Gaussiana"): mutate_function = gaussian_mutate
+else: mutate_function = mutate
 
 if st.button("Iniciar Algoritmo Genético"):
     best_solution = genetic_algorithm_streamlit(X_train, y_train, crossover_function, mutate_function, pop_size, num_generations, crossover_rate, mutation_rate)
