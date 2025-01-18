@@ -46,7 +46,7 @@ def fitness_function(chromosome, X_train, y_train):
     weights = chromosome[:-2]  # Pesos das variáveis
     threshold_standard = chromosome[-2]  # Limiar de decisão standard
     threshold_good = chromosome[-1] # Limiar de decisão good
-    scores = expit(np.dot(X_train_transformed, weights))  
+    scores = expit(np.dot(X_train, weights))  
     predictions = []
     for score in scores:
       if score >= threshold_good:
