@@ -169,8 +169,16 @@ num_generations = st.sidebar.slider("Número de gerações", 10, 500, 100, 10)
 crossover_rate = st.sidebar.slider("Taxa de Cruzamento", 0.1, 1.0, 0.8, 0.1)
 mutation_rate = st.sidebar.slider("Taxa de Mutação", 0.1, 1.0, 0.5, 0.1)
 
+crossover_option = st.selectbox(
+    "Selecione o método de Cruzamento",
+    ("Single Point Crossover", "Arithmetic Crossover"),
+)
+
+if (crossover_option == "Single Point Crossover") crossover_function = crossover
+else (crossover_option == "Arithmetic Crossover") crossover_function = arithmetic_crossover
+
 if st.button("Iniciar Algoritmo Genético"):
-    best_solution = genetic_algorithm_streamlit(X_train, y_train, crossover, mutate, pop_size, num_generations, crossover_rate, mutation_rate)
+    best_solution = genetic_algorithm_streamlit(X_train, y_train, crossover_function, mutate, pop_size, num_generations, crossover_rate, mutation_rate)
     st.write("Melhor solução encontrada:")
     st.write(f"Pesos: {best_solution[:-2]}")
     st.write(f"Limiar de decisão Standard: {best_solution[-2]:.4f}")
