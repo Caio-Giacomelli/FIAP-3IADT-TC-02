@@ -105,6 +105,8 @@ def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=1
             best_fitness = fitness.max()
             best_solution = population[fitness.argmax()]
 
+        fitness_history.append(best_fitness)
+        
         # Atualizar o gráfico no mesmo espaço
         fig, ax = plt.subplots()
         ax.plot(fitness_history, color="#ff4b4b", label="Melhor Aptidão")
