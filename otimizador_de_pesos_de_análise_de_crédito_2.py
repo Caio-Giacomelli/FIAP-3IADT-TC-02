@@ -145,8 +145,8 @@ y_train = data["Credit_Score"].values
 # Configurações do algoritmo
 pop_size = st.sidebar.slider("Tamanho da população", 10, 200, 50, 10)
 num_generations = st.sidebar.slider("Número de gerações", 10, 500, 100, 10)
-crossover_rate = st.sidebar.slider("Taxa de Cruzamento", 0.1, 1, 0.8, 0.1)
-mutation_rate = st.sidebar.slider("Taxa de Mutação", 0.1, 1, 0.5, 0.1)
+crossover_rate = st.sidebar.slider("Taxa de Cruzamento", 0.1, 1.0, 0.8, 0.1)
+mutation_rate = st.sidebar.slider("Taxa de Mutação", 0.1, 1.0, 0.5, 0.1)
 
 if st.button("Iniciar Algoritmo Genético"):
     best_solution = genetic_algorithm_streamlit(X_train, y_train, pop_size, num_generations, crossover_rate, mutation_rate)
