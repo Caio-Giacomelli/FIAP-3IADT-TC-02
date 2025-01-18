@@ -75,7 +75,7 @@ def mutate(chromosome, mutation_rate=0.1):
             chromosome[i] += np.random.uniform(-0.1, 0.1)
     return chromosome
 
-def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=10, crossover_rate, mutation_rate):
+def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=10, crossover_rate=0.8, mutation_rate=0.5):
     num_features = X_train.shape[1]
     population = initialize_population(pop_size, num_features)
     best_solution = None
