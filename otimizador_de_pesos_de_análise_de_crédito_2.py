@@ -88,7 +88,6 @@ def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=1
 
     for generation in range(num_generations):
         fitness = np.array([fitness_function(ind, X_train, y_train) for ind in population])
-        fitness_history.append(fitness.max())
 
         next_population = []
         for _ in range(pop_size // 2):
