@@ -175,7 +175,7 @@ crossover_option = st.selectbox(
 )
 
 if (crossover_option == "Single Point Crossover"): crossover_function = crossover
-else (crossover_option == "Arithmetic Crossover"): crossover_function = arithmetic_crossover
+else: crossover_function = arithmetic_crossover
 
 if st.button("Iniciar Algoritmo Genético"):
     best_solution = genetic_algorithm_streamlit(X_train, y_train, crossover_function, mutate, pop_size, num_generations, crossover_rate, mutation_rate)
