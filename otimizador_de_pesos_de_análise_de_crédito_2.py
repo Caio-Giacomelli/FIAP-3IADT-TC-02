@@ -82,10 +82,8 @@ def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=1
     best_fitness = -np.inf
     fitness_history = []
 
-    fig, ax = plt.subplots()
-    ax.set_title("Crescimento da Melhor Aptidão")
-    ax.set_xlabel("Geração")
-    ax.set_ylabel("Aptidão")
+    # Criar um espaço reservado para o gráfico
+    chart_placeholder = st.empty()
 
     for generation in range(num_generations):
         fitness = np.array([fitness_function(ind, X_train, y_train) for ind in population])
@@ -104,14 +102,14 @@ def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=1
             best_fitness = fitness.max()
             best_solution = population[fitness.argmax()]
 
-        # Atualizar o gráfico
-        ax.clear()
+        # Atualizar o gráfico no mesmo espaço
+        fig, ax = plt.subplots()
         ax.plot(fitness_history, color="blue", label="Melhor Aptidão")
         ax.set_title("Crescimento da Melhor Aptidão")
         ax.set_xlabel("Geração")
         ax.set_ylabel("Aptidão")
         ax.legend()
-        st.pyplot(fig)
+        chart_placeholder.pyplot(fig)
     
     return best_solution
 
