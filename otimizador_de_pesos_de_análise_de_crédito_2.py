@@ -112,8 +112,9 @@ def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=1
         ax.set_ylabel("Aptidão")
         ax.legend()
         chart_placeholder.pyplot(fig)
-
-    st.write(f"Limiar de decisão Good: {best_fitness}")
+        
+        st.write(f"Melhor aptidão da geração: {best_fitness}")
+    
     
     return best_solution
 
