@@ -94,7 +94,7 @@ def gaussian_mutate(chromosome, mutation_rate=0.5, sigma=0.1):
             chromosome[i] += np.random.normal(0, sigma)  # Perturbação Gaussiana
     return chromosome
 
-def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=10, crossover_rate=0.8, mutation_rate=0.5, crossover_function, mutation_function):
+def genetic_algorithm_streamlit(X_train, y_train, crossover_function, mutation_function, pop_size=10, num_generations=10, crossover_rate=0.8, mutation_rate=0.5):
     num_features = X_train.shape[1]
     population = initialize_population(pop_size, num_features)
     best_solution = None
@@ -170,7 +170,7 @@ crossover_rate = st.sidebar.slider("Taxa de Cruzamento", 0.1, 1.0, 0.8, 0.1)
 mutation_rate = st.sidebar.slider("Taxa de Mutação", 0.1, 1.0, 0.5, 0.1)
 
 if st.button("Iniciar Algoritmo Genético"):
-    best_solution = genetic_algorithm_streamlit(X_train, y_train, pop_size, num_generations, crossover_rate, mutation_rate, crossover, mutate)
+    best_solution = genetic_algorithm_streamlit(X_train, y_train, crossover, mutate, pop_size, num_generations, crossover_rate, mutation_rate)
     st.write("Melhor solução encontrada:")
     st.write(f"Pesos: {best_solution[:-2]}")
     st.write(f"Limiar de decisão Standard: {best_solution[-2]:.4f}")
