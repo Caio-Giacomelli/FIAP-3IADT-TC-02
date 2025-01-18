@@ -73,13 +73,28 @@ def crossover(parent1, parent2, crossover_rate=0.8):
         return child1, child2
     return parent1, parent2
 
+# Cruzamento Aritmético
+def arithmetic_crossover(parent1, parent2, crossover_rate=0.8, alpha=0.5):
+    if np.random.rand() < crossover_rate:
+        child1 = alpha * parent1 + (1 - alpha) * parent2
+        child2 = alpha * parent2 + (1 - alpha) * parent1
+        return child1, child2
+    return parent1, parent2
+
 def mutate(chromosome, mutation_rate=0.1):
     for i in range(len(chromosome)):
         if np.random.rand() < mutation_rate:
             chromosome[i] += np.random.uniform(-0.1, 0.1)
     return chromosome
 
-def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=10, crossover_rate=0.8, mutation_rate=0.5):
+# Perturbação Gaussiana
+def gaussian_mutate(chromosome, mutation_rate=0.5, sigma=0.1):
+    for i in range(len(chromosome)):
+        if np.random.rand() < mutation_rate:
+            chromosome[i] += np.random.normal(0, sigma)  # Perturbação Gaussiana
+    return chromosome
+
+def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=10, crossover_rate=0.8, mutation_rate=0.5, crossover_function, mutation_function):
     num_features = X_train.shape[1]
     population = initialize_population(pop_size, num_features)
     best_solution = None
@@ -98,9 +113,9 @@ def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=1
         for _ in range(pop_size // 2):
             parent1 = tournament_selection(population, fitness)
             parent2 = tournament_selection(population, fitness)
-            child1, child2 = crossover(parent1, parent2, crossover_rate)
-            next_population.append(mutate(child1, mutation_rate))
-            next_population.append(mutate(child2, mutation_rate))
+            child1, child2 = crossover_function(parent1, parent2, crossover_rate)
+            next_population.append(mutation_function(child1, mutation_rate))
+            next_population.append(mutation_function(child2, mutation_rate))
 
         next_population.append(population[fitness.argmax()]) # Elitismo
         population = np.array(next_population)
@@ -155,7 +170,7 @@ crossover_rate = st.sidebar.slider("Taxa de Cruzamento", 0.1, 1.0, 0.8, 0.1)
 mutation_rate = st.sidebar.slider("Taxa de Mutação", 0.1, 1.0, 0.5, 0.1)
 
 if st.button("Iniciar Algoritmo Genético"):
-    best_solution = genetic_algorithm_streamlit(X_train, y_train, pop_size, num_generations, crossover_rate, mutation_rate)
+    best_solution = genetic_algorithm_streamlit(X_train, y_train, pop_size, num_generations, crossover_rate, mutation_rate, crossover, mutate)
     st.write("Melhor solução encontrada:")
     st.write(f"Pesos: {best_solution[:-2]}")
     st.write(f"Limiar de decisão Standard: {best_solution[-2]:.4f}")
