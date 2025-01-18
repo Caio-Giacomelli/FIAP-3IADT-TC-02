@@ -16,12 +16,11 @@ import pygame
 from pygame.locals import *
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
+from google.colab import drive
 
 full_dt = pd.read_csv('https://raw.githubusercontent.com/Caio-Giacomelli/FIAP-3IADT-TC-02/refs/heads/main/credit_analysis_train.csv')
 
 full_dt.info()
-
-"""# Análise e Tratamento de dados"""
 
 # Removendo colunas que não utilizaremos em nossa otimização
 columns_to_remove = ['ID', 'Age', 'Customer_ID', 'Month', 'Name', 'SSN', 'Type_of_Loan', 'Occupation', 'Delay_from_due_date', 'Monthly_Inhand_Salary', 'Changed_Credit_Limit', 'Num_Credit_Inquiries', 'Credit_Mix', 'Credit_History_Age','Payment_of_Min_Amount','Total_EMI_per_month','Amount_invested_monthly', 'Payment_Behaviour', 'Outstanding_Debt', 'Credit_Utilization_Ratio', 'Monthly_Balance']
@@ -30,7 +29,7 @@ dt = full_dt.drop(columns=columns_to_remove)
 dt.duplicated().sum()
 
 dt.drop_duplicates(inplace=True)
-dt.shape
+# dt.shape
 
 # Removendo valores nulos ou mal formatados
 
@@ -50,8 +49,10 @@ dt_filtrado = dt_filtrado[dt_filtrado['Num_Bank_Accounts'] <= 30]
 dt_filtrado = dt_filtrado[dt_filtrado['Num_Credit_Card'] <= 30]
 dt_filtrado = dt_filtrado[dt_filtrado['Annual_Income'] <= 1_000_000]
 
+# dt_filtrado = dt_filtrado[dt_filtrado['Credit_Score'] != 'Standard']
+
 # checando porcentagem de valores nulos por coluna
-dt.info()
+# dt.info()
 
 fig, axes = plt.subplots(2, 3, figsize=(15,9))
 fig.suptitle('Distriuição dos valores do dataset')
@@ -138,32 +139,41 @@ column_names = transformer.get_feature_names_out()
 X_train_transformed = pd.DataFrame(transformer.transform(X_train), columns=column_names)
 X_train_transformed
 
-"""# Implementação de Algoritmo Genético"""
+from scipy.special import expit  # Função sigmoid eficiente
 
 y_train_dt = pd.DataFrame(y_train)
 y_train_dt['Credit_Score'].values
 
-import itertools
+# import itertools
 
 # Pygame
 
-WIDTH, HEIGHT = 800, 400
-NODE_RADIUS = 10
-FPS = 30
-PLOT_X_OFFSET = 450
+# WIDTH, HEIGHT = 800, 400
+# NODE_RADIUS = 10
+# FPS = 30
+# PLOT_X_OFFSET = 450
 
-pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Otimizador de Pesos de Análise de Crédito")
-clock = pygame.time.Clock()
-generation_counter = itertools.count(start=1)
+# pygame.init()
+# screen = pygame.display.set_mode((WIDTH, HEIGHT))
+# pygame.display.set_caption("Otimizador de Pesos de Análise de Crédito")
+# clock = pygame.time.Clock()
+# generation_counter = itertools.count(start=1)
 
 # Função de aptidão
 def fitness_function(chromosome, y_train):
+
+    ## Versão com 1 limiar
+    # weights = chromosome[:-1]  # Pesos das variáveis
+    # threshold = chromosome[-1]  # Limiar de decisão
+    # scores = expit(np.dot(X_train_transformed, weights))
+    # predictions = (scores >= threshold).astype(int)
+
+    # return f1_score(y_train, predictions, average='micro')
+
     weights = chromosome[:-2]  # Pesos das variáveis
     threshold_standard = chromosome[-2]  # Limiar de decisão standard
     threshold_good = chromosome[-1] # Limiar de decisão good
-    scores = np.dot(X_train, weights)
+    scores = expit(np.dot(X_train_transformed, weights))
     predictions = []
     for score in scores:
       if score >= threshold_good:
@@ -173,6 +183,7 @@ def fitness_function(chromosome, y_train):
       else:
         predictions.append(0)
     return f1_score(y_train, predictions, average='micro')
+
 
 # Inicialização da população
 def initialize_population(pop_size, num_features):
@@ -184,8 +195,19 @@ def tournament_selection(population, fitness, k=3):
     best = selected[np.argmax(fitness[selected])]
     return population[best]
 
-# TODO: 2 tipos Cruzamento
-# Cruzamento
+# Seleção por ranking
+def ranking_selection(population, fitness):
+
+    ranked_indices = np.argsort(fitness)
+    probabilities = np.linspace(0, 1, len(fitness))
+    probabilities /= probabilities.sum()
+
+    # Escolher um indivíduo baseado nas probabilidades do ranking
+    selected_index = np.random.choice(ranked_indices, p=probabilities)
+    return population[selected_index]
+
+
+# Cruzamento - Single Point Crossover
 def crossover(parent1, parent2, crossover_rate=0.8):
     if np.random.rand() < crossover_rate:
         point = np.random.randint(1, len(parent1) - 1)
@@ -194,23 +216,39 @@ def crossover(parent1, parent2, crossover_rate=0.8):
         return child1, child2
     return parent1, parent2
 
-# TODO: 2 tipos de mutação
-# Mutação
-def mutate(chromosome, mutation_rate=0.3):
+# Cruzamento Aritmético
+def arithmetic_crossover(parent1, parent2, crossover_rate=0.8, alpha=0.5):
+    if np.random.rand() < crossover_rate:
+        child1 = alpha * parent1 + (1 - alpha) * parent2
+        child2 = alpha * parent2 + (1 - alpha) * parent1
+        return child1, child2
+    return parent1, parent2
+
+# Mutação com perturbação uniforme
+def mutate(chromosome, mutation_rate=0.5):
     for i in range(len(chromosome)):
         if np.random.rand() < mutation_rate:
             chromosome[i] += np.random.uniform(-0.1, 0.1)
     return chromosome
 
+# Perturbação Gaussiana
+def gaussian_mutate(chromosome, mutation_rate=0.5, sigma=0.1):
+    for i in range(len(chromosome)):
+        if np.random.rand() < mutation_rate:
+            chromosome[i] += np.random.normal(0, sigma)  # Perturbação Gaussiana
+    return chromosome
+
 # Algoritmo Genético
 def genetic_algorithm(X_train, y_train, pop_size=50, num_generations=100):
     num_features = X_train.shape[1]
+
     population = initialize_population(pop_size, num_features)
     best_solution = None
     best_fitness = -np.inf
 
     for generation in range(num_generations):
         fitness = np.array([fitness_function(ind, y_train) for ind in population])
+
         next_population = []
 
         # Seleção e reprodução
@@ -221,9 +259,8 @@ def genetic_algorithm(X_train, y_train, pop_size=50, num_generations=100):
             next_population.append(mutate(child1))
             next_population.append(mutate(child2))
 
-        population = np.array(next_population)
-
         next_population.append(population[fitness.argmax()]) # Elitismo
+        population = np.array(next_population)
 
         # TODO: Pygame + Gráfico
 
@@ -243,4 +280,3 @@ best_solution = genetic_algorithm(X_train_transformed, y_train_dt['Credit_Score'
 print("\nMelhor solução encontrada:")
 print(f"Pesos: {best_solution[:-1]}")
 print(f"Limiar de decisão: {best_solution[-1]:.4f}")
-
