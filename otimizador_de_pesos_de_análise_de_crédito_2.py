@@ -116,6 +116,7 @@ def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=1
         ax.plot(fitness_history, color="#ff4b4b", label="Melhor Aptidão")
         ax.set_title("Crescimento da Melhor Aptidão")
         ax.set_xlabel("Geração")
+        ax.xticks((range(1,num_generations))
         ax.set_ylabel("Aptidão")
         ax.legend()
         chart_placeholder.pyplot(fig)
