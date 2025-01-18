@@ -97,7 +97,9 @@ def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=1
             next_population.append(mutate(child1))
             next_population.append(mutate(child2))
 
+        next_population.append(population[fitness.argmax()]) # Elitismo
         population = np.array(next_population)
+        
         if fitness.max() > best_fitness:
             best_fitness = fitness.max()
             best_solution = population[fitness.argmax()]
