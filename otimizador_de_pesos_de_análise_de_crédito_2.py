@@ -84,7 +84,7 @@ def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=1
     population = initialize_population(pop_size, num_features)
     best_solution = None
     best_fitness = -np.inf
-    fitness_history = [0]
+    fitness_history = []
 
     # Criar um espaço reservado para o gráfico
     chart_placeholder = st.empty()
