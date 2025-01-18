@@ -136,12 +136,12 @@ transformer.fit(X_train)
 
 column_names = transformer.get_feature_names_out()
 X_train_transformed = pd.DataFrame(transformer.transform(X_train), columns=column_names)
-X_train_transformed
+# X_train_transformed
 
 from scipy.special import expit  # Função sigmoid eficiente
 
 y_train_dt = pd.DataFrame(y_train)
-y_train_dt['Credit_Score'].values
+# y_train_dt['Credit_Score'].values
 
 # import itertools
 
