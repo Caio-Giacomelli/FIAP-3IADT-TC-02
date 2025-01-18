@@ -43,14 +43,18 @@ def load_data():
 
 # Funções para o Algoritmo Genético
 def fitness_function(chromosome, X_train, y_train):
-    weights = chromosome[:-2]
-    threshold_standard = chromosome[-2]
-    threshold_good = chromosome[-1]
-    scores = expit(np.dot(X_train, weights))
-    predictions = np.array([
-        2 if score >= threshold_good else 1 if score >= threshold_standard else 0
-        for score in scores
-    ])
+    weights = chromosome[:-2]  # Pesos das variáveis
+    threshold_standard = chromosome[-2]  # Limiar de decisão standard
+    threshold_good = chromosome[-1] # Limiar de decisão good
+    scores = expit(np.dot(X_train_transformed, weights))  
+    predictions = []
+    for score in scores:
+      if score >= threshold_good:
+        predictions.append(2)
+      elif score >= threshold_standard:
+        predictions.append(1)
+      else:
+        predictions.append(0)
     return f1_score(y_train, predictions, average='micro')
 
 def initialize_population(pop_size, num_features):
