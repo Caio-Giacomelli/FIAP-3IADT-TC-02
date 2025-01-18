@@ -5,3 +5,4 @@ pygame
 matplotlib
 scikit-learn
 google
+streamlit
