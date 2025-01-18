@@ -16,7 +16,6 @@ import pygame
 from pygame.locals import *
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
-from google.colab import drive
 
 full_dt = pd.read_csv('https://raw.githubusercontent.com/Caio-Giacomelli/FIAP-3IADT-TC-02/refs/heads/main/credit_analysis_train.csv')
 
