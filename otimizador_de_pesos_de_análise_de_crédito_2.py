@@ -111,8 +111,9 @@ def genetic_algorithm_streamlit(X_train, y_train, pop_size=10, num_generations=1
         ax.set_xlabel("Geração")
         ax.set_ylabel("Aptidão")
         ax.legend()
-        with chart_placeholder.container():            
-            chart_placeholder.pyplot(fig)
+        chart_placeholder.pyplot(fig)
+        
+        with chart_placeholder.container():                     
             st.write(f"Melhor aptidão da geração: {best_fitness}")
     
     
