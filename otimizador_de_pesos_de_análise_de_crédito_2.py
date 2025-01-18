@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import pygame
+import streamlit as st
 from pygame.locals import *
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
