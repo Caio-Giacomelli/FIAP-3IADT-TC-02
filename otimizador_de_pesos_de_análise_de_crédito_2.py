@@ -5,6 +5,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 from scipy.special import expit  # Função sigmoid eficiente
 import streamlit as st
 
@@ -160,8 +162,12 @@ transformer = ColumnTransformer([
     ])
 ])
 
-X_train = transformer.fit_transform(data.drop(columns=["Credit_Score"]))
-y_train = data["Credit_Score"].values
+# Separando os dados em treino e teste
+X = transformer.fit_transform(data.drop(columns=["Credit_Score"]))
+y = data["Credit_Score"].values
+
+# Dividindo a base em 70% para treino e 30% para teste
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
 # Configurações do algoritmo
 pop_size = st.sidebar.slider("Tamanho da população", 10, 200, 50, 10)
@@ -187,7 +193,32 @@ else: mutate_function = mutate
 
 if st.button("Iniciar Algoritmo Genético"):
     best_solution = genetic_algorithm_streamlit(X_train, y_train, crossover_function, mutate_function, pop_size, num_generations, crossover_rate, mutation_rate)
+
+    # Validando o modelo na base de teste
+    weights = best_solution[:-2]  # Pesos das variáveis
+    threshold_standard = best_solution[-2]  # Limiar de decisão para "Standard"
+    threshold_good = best_solution[-1]  # Limiar de decisão para "Good"
+    
+    # Fazendo predições no conjunto de teste
+    scores_test = expit(np.dot(X_test, weights))
+    predictions_test = []
+    
+    for score in scores_test:
+        if score >= threshold_good:
+            predictions_test.append(2)  # Classe "Good"
+        elif score >= threshold_standard:
+            predictions_test.append(1)  # Classe "Standard"
+        else:
+            predictions_test.append(0)  # Classe "Poor"
+    
+    # Calculando a acurácia no conjunto de teste
+    accuracy = accuracy_score(y_test, predictions_test)
+
+    # Exibindo a acurácia final     
     st.write("Melhor solução encontrada:")
     st.write(f"Pesos: {best_solution[:-2]}")
     st.write(f"Limiar de decisão Standard: {best_solution[-2]:.4f}")
     st.write(f"Limiar de decisão Good: {best_solution[-1]:.4f}")
+
+    st.write("Acurácia no conjunto de teste:")
+    st.write(f"{accuracy:.4f}")
