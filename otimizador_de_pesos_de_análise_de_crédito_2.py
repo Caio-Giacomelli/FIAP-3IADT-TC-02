@@ -215,10 +215,11 @@ if st.button("Iniciar Algoritmo Genético"):
     accuracy = accuracy_score(y_test, predictions_test)
 
     # Exibindo a acurácia final     
+    st.text("")
     st.write("Melhor solução encontrada:")
     st.write(f"Pesos: {best_solution[:-2]}")
     st.write(f"Limiar de decisão Standard: {best_solution[-2]:.4f}")
     st.write(f"Limiar de decisão Good: {best_solution[-1]:.4f}")
-
+    st.text("")
     st.write("Acurácia no conjunto de teste:")
     st.write(f"{accuracy:.4f}")
