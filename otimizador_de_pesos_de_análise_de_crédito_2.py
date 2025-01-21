@@ -114,36 +114,51 @@ def gaussian_mutate(chromosome, mutation_rate=0.5, sigma=0.1):
   return chromosome
 
 def genetic_algorithm_streamlit(X_train, y_train, crossover_function, mutation_function, pop_size=10, num_generations=10, crossover_rate=0.8, mutation_rate=0.5):
-  num_features = X_train.shape[1] + 1 # +1 inclui o intercept
-  intercepts = np.ones((X_train.shape[0], 1))
-  X_train = np.concatenate((intercepts, X_train), axis=1)
+    num_features = X_train.shape[1] + 1 # +1 inclui o intercept
+    intercepts = np.ones((X_train.shape[0], 1))
+    X_train = np.concatenate((intercepts, X_train), axis=1)
+    
+    population = initialize_population(pop_size, num_features)
+    best_solution = None
+    best_fitness = -np.inf
+    fitness_history = []
 
-  population = initialize_population(pop_size, num_features)
-  best_solution = None
-  best_fitness = -np.inf
+    # Criar um espaço reservado para o gráfico
+    chart_placeholder = st.empty()
+    aptitude_placeholder = st.empty()
 
-  for generation in range(num_generations):
-    fitness = np.array([fitness_function(ind, X_train, y_train) for ind in population])
+    for generation in range(num_generations):
+        fitness = np.array([fitness_function(ind, X_train, y_train) for ind in population])
+        if (num_generations == 0): fitness_history.append(fitness)
 
-    # Melhor solução
-    if fitness.max() > best_fitness:
-      best_fitness = fitness.max()
-      best_solution = population[fitness.argmax()]
+        next_population = []
+        for _ in range(pop_size // 2):
+            parent1 = tournament_selection(population, fitness)
+            parent2 = tournament_selection(population, fitness)
+            child1, child2 = crossover_function(parent1, parent2, crossover_rate)
+            next_population.append(mutation_function(child1, mutation_rate))
+            next_population.append(mutation_function(child2, mutation_rate))
 
-    print(f"Geração {generation + 1}:")
-    print(f"Melhor aptidão = {best_fitness:.4f} | Pesos escolhidos = {np.round(best_solution[:-2], 3)} | Limiares escolhidos = {np.round(best_solution[-2:], 3)}")
-    print('=====================================================================')
+        next_population.append(population[fitness.argmax()]) # Elitismo
+        population = np.array(next_population)
+        
+        if fitness.max() > best_fitness:
+            best_fitness = fitness.max()
+            best_solution = population[fitness.argmax()]
 
-    # Seleção e reprodução
-    next_population = np.array([population[fitness.argmax()]]) # Elitismo
-    for _ in range(pop_size // 2):
-      parent1 = tournament_selection(population, fitness)
-      parent2 = tournament_selection(population, fitness)
-      child1, child2 = crossover(parent1, parent2)
-      next_population = np.append(next_population, [gaussian_mutate(child1)], axis=0)
-      next_population = np.append(next_population, [gaussian_mutate(child2)], axis=0)
-
-    population = next_population
+        fitness_history.append(best_fitness)
+        
+        # Atualizar o gráfico no mesmo espaço
+        fig, ax = plt.subplots()
+        ax.plot(fitness_history, color="#ff4b4b", label="Melhor Aptidão")
+        ax.set_title("Crescimento da Melhor Aptidão")
+        ax.set_xlabel("Geração")
+        ax.set_ylabel("Aptidão")
+        ax.legend()
+        chart_placeholder.pyplot(fig)
+        
+        with aptitude_placeholder.container():                     
+            st.write(f"Melhor aptidão da geração: {best_fitness}")
     
     
     return best_solution
