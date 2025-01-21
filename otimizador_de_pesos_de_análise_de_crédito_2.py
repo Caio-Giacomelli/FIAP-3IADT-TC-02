@@ -207,7 +207,7 @@ if st.button("Iniciar Algoritmo Genético"):
     X_test_genetic = np.concatenate((intercepts, X_test), axis=1)
     
     # Fazendo predições no conjunto de teste
-    scores_test = expit(np.dot(X_test, weights))
+    scores_test = expit(np.dot(X_test_genetic, weights))
     predictions_test = (scores_test[:, None] >= thresholds).sum(axis=1)
     
     # Calculando o f1 score no conjunto de teste
