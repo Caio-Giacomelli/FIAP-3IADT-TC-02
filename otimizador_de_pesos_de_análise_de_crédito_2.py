@@ -203,11 +203,11 @@ if st.button("Iniciar Algoritmo Genético"):
     thresholds = best_solution[-2:] # Limiares
     
     # manualmente adicionando coluna de intercept
-    intercepts = np.ones((X_test_transformed.shape[0], 1))
-    X_test_genetic = np.concatenate((intercepts, X_test_transformed), axis=1)
+    intercepts = np.ones((X_test.shape[0], 1))
+    X_test_genetic = np.concatenate((intercepts, X_test), axis=1)
     
     # Fazendo predições no conjunto de teste
-    scores_test = expit(np.dot(X_test_genetic, weights))
+    scores_test = expit(np.dot(X_test, weights))
     predictions_test = (scores_test[:, None] >= thresholds).sum(axis=1)
     
     # Calculando o f1 score no conjunto de teste
