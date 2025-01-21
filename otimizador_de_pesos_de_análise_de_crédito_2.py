@@ -212,20 +212,12 @@ if st.button("Iniciar Algoritmo Genético"):
     
     # Calculando o f1 score no conjunto de teste
     f1_test = f1_score(y_test, predictions_test, average='micro')
-    
-    # Resultados
-    print("\nMelhor solução encontrada:")
-    print(f"Pesos: {np.round(best_solution[:-2], 3)}")
-    print(f"Limiar de decisão: {np.round(best_solution[-2:], 3)}")
-    print(f"Score de Teste: {f1_test}")
-    print("Relatório de Classificação:")
-    print(classification_report(y_test, predictions_test, target_names=["Poor", "Standard", "Good"]))
 
     # Exibindo a acurácia final     
     st.text("")
     st.write("Melhor solução encontrada:")
     st.write(f"Pesos: {np.round(best_solution[:-2], 3)}")
-    st.write(f"Limiar de decisão: {np.round(best_solution[-2:], 3)})
+    st.write(f"Limiar de decisão: {np.round(best_solution[-2:], 3)}")
     st.text("")
     st.write("Acurácia no conjunto de teste:")
     st.write(f"{f1_test}")
