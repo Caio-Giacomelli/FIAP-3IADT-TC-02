@@ -234,5 +234,5 @@ if st.button("Iniciar Algoritmo Genético"):
     st.write(f"Pesos: {np.round(best_solution[:-2], 3)}")
     st.write(f"Limiar de decisão: {np.round(best_solution[-2:], 3)}")
     st.text("")
-    st.write("Acurácia no conjunto de teste:")
+    st.write("F1 Score:")
     st.write(f"{f1_test}")
