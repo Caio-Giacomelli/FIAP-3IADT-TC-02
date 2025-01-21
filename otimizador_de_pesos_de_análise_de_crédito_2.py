@@ -45,22 +45,17 @@ def load_data():
 
 # Funções para o Algoritmo Genético
 def fitness_function(chromosome, X_train, y_train):
-    weights = chromosome[:-2]  # Pesos das variáveis
-    threshold_standard = chromosome[-2]  # Limiar de decisão standard
-    threshold_good = chromosome[-1] # Limiar de decisão good
-    scores = expit(np.dot(X_train, weights))  
-    predictions = []
-    for score in scores:
-      if score >= threshold_good:
-        predictions.append(2)
-      elif score >= threshold_standard:
-        predictions.append(1)
-      else:
-        predictions.append(0)
-    return f1_score(y_train, predictions, average='micro')
+  weights = chromosome[:-2]  # Pesos das variáveis
+  thresholds = chromosome[-2:]
+  scores = expit(np.dot(X_train, weights))
+  predictions = (scores[:, None] >= thresholds).sum(axis=1)
+  return f1_score(y_train, predictions, average='micro')
 
 def initialize_population(pop_size, num_features):
-    return np.random.uniform(-1, 1, (pop_size, num_features + 2))
+  weights = np.random.uniform(-1, 1, (pop_size, num_features))  # Inclui pesos + intercept
+  thresholds = np.array([0.3, 0.5])
+  thresholds = np.tile(thresholds, (pop_size, 1))  # Expande para corresponder ao tamanho da população
+  return np.concatenate((weights, thresholds), axis=1)
 
 def tournament_selection(population, fitness, k=3):
     selected = np.random.choice(len(population), k, replace=False)
@@ -84,61 +79,71 @@ def arithmetic_crossover(parent1, parent2, crossover_rate=0.8, alpha=0.5):
     return parent1, parent2
 
 def mutate(chromosome, mutation_rate=0.1):
-    for i in range(len(chromosome)):
-        if np.random.rand() < mutation_rate:
-            chromosome[i] += np.random.uniform(-0.1, 0.1)
-    return chromosome
+  should_mutate = np.random.rand() < mutation_rate
+  # atualização de pesos
+  for i in range(len(chromosome) - 2):
+    if should_mutate:
+      chromosome[i] += np.random.uniform(-1, 1)
+
+  # atualização de limiares
+  threshold_mutation1 = chromosome[-2] + np.random.uniform(-0.1, 0.1) if np.random.rand() < mutation_rate else chromosome[-2]
+  threshold_mutation1 = chromosome[-2] if (threshold_mutation1 >= 1 or threshold_mutation1 <= 0) else threshold_mutation1
+
+  threshold_mutation2 = chromosome[-1] + np.random.uniform(-0.1, 0.1) if np.random.rand() < mutation_rate else chromosome[-1]
+  threshold_mutation2 = chromosome[-1] if (threshold_mutation2 >= 1 or threshold_mutation2 <= 0) else threshold_mutation2
+
+  chromosome[-2:] =  np.array([threshold_mutation1, threshold_mutation2])
+  return chromosome
 
 # Perturbação Gaussiana
 def gaussian_mutate(chromosome, mutation_rate=0.5, sigma=0.1):
-    for i in range(len(chromosome)):
-        if np.random.rand() < mutation_rate:
-            chromosome[i] += np.random.normal(0, sigma)  # Perturbação Gaussiana
-    return chromosome
+  should_mutate = np.random.rand() < mutation_rate
+
+  for i in range(len(chromosome) - 2):
+    if should_mutate:
+      chromosome[i] += np.random.normal(0, sigma)  # Perturbação Gaussiana
+
+  # atualização de thresholds
+  threshold_mutation1 = chromosome[-2] + np.random.normal(0, 0.06) if np.random.rand() < mutation_rate else chromosome[-2]
+  threshold_mutation1 = chromosome[-2] if (threshold_mutation1 >= 1 or threshold_mutation1 <= 0) else threshold_mutation1
+
+  threshold_mutation2 = chromosome[-1] + np.random.normal(0, 0.06) if np.random.rand() < mutation_rate else chromosome[-1]
+  threshold_mutation2 = chromosome[-1] if (threshold_mutation2 >= 1 or threshold_mutation2 <= 0) else threshold_mutation2
+
+  chromosome[-2:] =  np.array([threshold_mutation1, threshold_mutation2])
+  return chromosome
 
 def genetic_algorithm_streamlit(X_train, y_train, crossover_function, mutation_function, pop_size=10, num_generations=10, crossover_rate=0.8, mutation_rate=0.5):
-    num_features = X_train.shape[1]
-    population = initialize_population(pop_size, num_features)
-    best_solution = None
-    best_fitness = -np.inf
-    fitness_history = []
+  num_features = X_train.shape[1] + 1 # +1 inclui o intercept
+  intercepts = np.ones((X_train.shape[0], 1))
+  X_train = np.concatenate((intercepts, X_train), axis=1)
 
-    # Criar um espaço reservado para o gráfico
-    chart_placeholder = st.empty()
-    aptitude_placeholder = st.empty()
+  population = initialize_population(pop_size, num_features)
+  best_solution = None
+  best_fitness = -np.inf
 
-    for generation in range(num_generations):
-        fitness = np.array([fitness_function(ind, X_train, y_train) for ind in population])
-        if (num_generations == 0): fitness_history.append(fitness)
+  for generation in range(num_generations):
+    fitness = np.array([fitness_function(ind, X_train, y_train) for ind in population])
 
-        next_population = []
-        for _ in range(pop_size // 2):
-            parent1 = tournament_selection(population, fitness)
-            parent2 = tournament_selection(population, fitness)
-            child1, child2 = crossover_function(parent1, parent2, crossover_rate)
-            next_population.append(mutation_function(child1, mutation_rate))
-            next_population.append(mutation_function(child2, mutation_rate))
+    # Melhor solução
+    if fitness.max() > best_fitness:
+      best_fitness = fitness.max()
+      best_solution = population[fitness.argmax()]
 
-        next_population.append(population[fitness.argmax()]) # Elitismo
-        population = np.array(next_population)
-        
-        if fitness.max() > best_fitness:
-            best_fitness = fitness.max()
-            best_solution = population[fitness.argmax()]
+    print(f"Geração {generation + 1}:")
+    print(f"Melhor aptidão = {best_fitness:.4f} | Pesos escolhidos = {np.round(best_solution[:-2], 3)} | Limiares escolhidos = {np.round(best_solution[-2:], 3)}")
+    print('=====================================================================')
 
-        fitness_history.append(best_fitness)
-        
-        # Atualizar o gráfico no mesmo espaço
-        fig, ax = plt.subplots()
-        ax.plot(fitness_history, color="#ff4b4b", label="Melhor Aptidão")
-        ax.set_title("Crescimento da Melhor Aptidão")
-        ax.set_xlabel("Geração")
-        ax.set_ylabel("Aptidão")
-        ax.legend()
-        chart_placeholder.pyplot(fig)
-        
-        with aptitude_placeholder.container():                     
-            st.write(f"Melhor aptidão da geração: {best_fitness}")
+    # Seleção e reprodução
+    next_population = np.array([population[fitness.argmax()]]) # Elitismo
+    for _ in range(pop_size // 2):
+      parent1 = tournament_selection(population, fitness)
+      parent2 = tournament_selection(population, fitness)
+      child1, child2 = crossover(parent1, parent2)
+      next_population = np.append(next_population, [gaussian_mutate(child1)], axis=0)
+      next_population = np.append(next_population, [gaussian_mutate(child2)], axis=0)
+
+    population = next_population
     
     
     return best_solution
@@ -167,7 +172,7 @@ X = transformer.fit_transform(data.drop(columns=["Credit_Score"]))
 y = data["Credit_Score"].values
 
 # Dividindo a base em 70% para treino e 30% para teste
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Configurações do algoritmo
 pop_size = st.sidebar.slider("Tamanho da população", 10, 200, 50, 10)
@@ -194,32 +199,33 @@ else: mutate_function = mutate
 if st.button("Iniciar Algoritmo Genético"):
     best_solution = genetic_algorithm_streamlit(X_train, y_train, crossover_function, mutate_function, pop_size, num_generations, crossover_rate, mutation_rate)
 
-    # Validando o modelo na base de teste
     weights = best_solution[:-2]  # Pesos das variáveis
-    threshold_standard = best_solution[-2]  # Limiar de decisão para "Standard"
-    threshold_good = best_solution[-1]  # Limiar de decisão para "Good"
+    thresholds = best_solution[-2:] # Limiares
+    
+    # manualmente adicionando coluna de intercept
+    intercepts = np.ones((X_test_transformed.shape[0], 1))
+    X_test_genetic = np.concatenate((intercepts, X_test_transformed), axis=1)
     
     # Fazendo predições no conjunto de teste
-    scores_test = expit(np.dot(X_test, weights))
-    predictions_test = []
+    scores_test = expit(np.dot(X_test_genetic, weights))
+    predictions_test = (scores_test[:, None] >= thresholds).sum(axis=1)
     
-    for score in scores_test:
-        if score >= threshold_good:
-            predictions_test.append(2)  # Classe "Good"
-        elif score >= threshold_standard:
-            predictions_test.append(1)  # Classe "Standard"
-        else:
-            predictions_test.append(0)  # Classe "Poor"
+    # Calculando o f1 score no conjunto de teste
+    f1_test = f1_score(y_test, predictions_test, average='micro')
     
-    # Calculando a acurácia no conjunto de teste
-    accuracy = accuracy_score(y_test, predictions_test)
+    # Resultados
+    print("\nMelhor solução encontrada:")
+    print(f"Pesos: {np.round(best_solution[:-2], 3)}")
+    print(f"Limiar de decisão: {np.round(best_solution[-2:], 3)}")
+    print(f"Score de Teste: {f1_test}")
+    print("Relatório de Classificação:")
+    print(classification_report(y_test, predictions_test, target_names=["Poor", "Standard", "Good"]))
 
     # Exibindo a acurácia final     
     st.text("")
     st.write("Melhor solução encontrada:")
-    st.write(f"Pesos: {best_solution[:-2]}")
-    st.write(f"Limiar de decisão Standard: {best_solution[-2]:.4f}")
-    st.write(f"Limiar de decisão Good: {best_solution[-1]:.4f}")
+    st.write(f"Pesos: {np.round(best_solution[:-2], 3)}")
+    st.write(f"Limiar de decisão: {np.round(best_solution[-2:], 3)})
     st.text("")
     st.write("Acurácia no conjunto de teste:")
-    st.write(f"{accuracy:.4f}")
+    st.write(f"{f1_test}")
