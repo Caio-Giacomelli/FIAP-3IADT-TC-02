@@ -164,7 +164,7 @@ def genetic_algorithm_streamlit(X_train, y_train, crossover_function, mutation_f
     return best_solution
 
 # Interface Streamlit
-st.title("Algoritmo Genético com Visualização no Streamlit")
+st.subheader("Algoritmo genético - Otimização de Pesos para Análise de Crédito", divider="red")
 
 # Carregar dados
 data = load_data()
